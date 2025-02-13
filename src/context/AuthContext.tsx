@@ -5,6 +5,7 @@ import supabase from "./supabaseClient";
 type UserContext = {
   user: UserInterface | null;
   setUser: (user: UserInterface | null) => void;
+  logout: () => void;
 };
 
 export const AuthContext = createContext<UserContext | null>(null);
@@ -49,11 +50,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user]);
 
+  const logout = async () => {
+    await supabase.auth.signOut();
+    localStorage.removeItem("user");
+    setUser(null);
+  };
+
   return (
     <AuthContext.Provider
       value={{
         user,
         setUser,
+        logout,
       }}
     >
       {children}

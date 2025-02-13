@@ -1,17 +1,19 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { MoonIcon, SunIcon } from "lucide-react";
-import supabase from "../context/supabaseClient";
 
 export function Navbar() {
-  const { user } = useContext(AuthContext);
+  const navigator = useNavigate();
+  const authContext = useContext(AuthContext);
+  const user = authContext ? authContext.user : null;
   const { theme, toggleTheme } = useTheme();
   console.log("user", user);
+
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    supabase.auth.signOut();
+    authContext?.logout();
+    navigator("/");
   };
 
   return (

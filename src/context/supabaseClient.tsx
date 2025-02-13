@@ -1,8 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
 
+console.log(import.meta.env);
 const supabase = createClient(
-  process.env.REACT_PUBLIC_SUPABASE_URL!,
-  process.env.REACT_PUBLIC_SUPABASE_ANON_KEY!
+  import.meta.env.VITE_PUBLIC_SUPABASE_URL!,
+  import.meta.env.VITE_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 export default supabase;

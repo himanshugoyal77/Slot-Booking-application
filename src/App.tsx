@@ -5,6 +5,8 @@ import AuthPage from "./pages/Auth";
 import Home from "./pages/Home";
 import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
 
+import Dashboard from "./pages/Dashboard";
+
 const Layout = () => {
   const { theme } = useTheme();
 
@@ -31,6 +33,10 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <Home />,
+      },
+      {
+        path: "/dashboard",
+        element: <Dashboard />,
       },
       {
         path: "/login",
