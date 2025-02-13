@@ -17,7 +17,7 @@ export function Navbar() {
   };
 
   return (
-    <nav className="flex items-center justify-between py-4 px-6 border-b">
+    <nav className="z-[9999] flex items-center justify-between py-4 px-6 border-b">
       <div className="flex items-center gap-8">
         <a href="/" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">

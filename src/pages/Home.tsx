@@ -1,8 +1,23 @@
 import { Users, Calendar, Shield } from "lucide-react";
 import { FeatureCard } from "../components/FeatureCard";
 import { CalendarStep } from "../components/CalendarStep";
+import { useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 const Home = () => {
+  const navigator = useNavigate();
+  const authContext = useContext(AuthContext);
+  const user = authContext ? authContext.user : null;
+
+  const handleClick = () => {
+    if (user) {
+      navigator("/dashboard");
+    } else {
+      navigator("/login");
+    }
+  };
+
   return (
     <>
       <main className="container mx-auto px-4 py-12">
@@ -16,7 +31,10 @@ const Home = () => {
           <p className="text-xl text-gray-600 max-w-2xl">
             A better and faster way to schedule across the globe.
           </p>
-          <button className="px-8 py-4 text-white rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
+          <button
+            onClick={handleClick}
+            className="px-8 py-4 text-white rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+          >
             Get Started Free
           </button>
         </div>
