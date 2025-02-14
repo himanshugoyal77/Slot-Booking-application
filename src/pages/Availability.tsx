@@ -1,183 +1,248 @@
 import React, { useState } from "react";
+import { Clock, Plus, X, Copy } from "lucide-react";
 import {
-  FormControlLabel,
-  Checkbox,
-  TextField,
-  Button,
-  Grid,
-  Typography,
-  Container,
-  MenuItem,
-} from "@mui/material";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { DialogDescription } from "@radix-ui/react-dialog";
 
-const weekdays = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
+const _weekDays = [
+  { index: 0, day: "S", name: "Sunday", isUnavailable: true, times: [] },
+  {
+    index: 1,
+    day: "M",
+    name: "Monday",
+    times: [{ start: "9:00am", end: "5:00pm" }],
+    isUnavailable: false,
+  },
+  {
+    index: 2,
+    day: "T",
+    name: "Tuesday",
+    times: [{ start: "9:00am", end: "5:00pm" }],
+    isUnavailable: false,
+  },
+  {
+    index: 3,
+    day: "W",
+    name: "Wednesday",
+    times: [{ start: "9:00am", end: "5:00pm" }],
+    isUnavailable: false,
+  },
+  {
+    index: 4,
+    day: "Th",
+    name: "Thursday",
+    times: [
+      { start: "9:00am", end: "5:00pm" },
+      { start: "6:00pm", end: "7:00pm" },
+    ],
+    isUnavailable: false,
+  },
+  {
+    index: 5,
+    day: "F",
+    name: "Friday",
+    times: [{ start: "9:00am", end: "5:00pm" }],
+    isUnavailable: false,
+  },
+  { index: 6, day: "St", name: "Saturday", isUnavailable: true, times: [] },
 ];
-const timezones = ["UTC", "GMT", "EST", "PST", "IST", "CET", "JST"];
 
-const Availability = () => {
-  const [availability, setAvailability] = useState(
-    weekdays.reduce((acc, day) => ({ ...acc, [day]: [] }), {})
-  );
-  const [selectedDay, setSelectedDay] = useState(weekdays[0]);
-  const [timeSlot, setTimeSlot] = useState({
-    start: "",
-    end: "",
-    timezone: "UTC",
-  });
-  const [copiedDay, setCopiedDay] = useState(null);
+const WeeklyHours = () => {
+  const [showCopyModal, setShowCopyModal] = useState(false);
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [modalSelectedDays, setModalSelectedDays] = useState([]);
 
-  const handleDayToggle = (day) => {
-    setAvailability((prev) => ({
-      ...prev,
-      [day]: prev[day].length ? [] : prev[day],
-    }));
-  };
+  const [weekDays, setWeekDays] = useState(_weekDays);
 
-  const handleTimeChange = (e) => {
-    setTimeSlot({ ...timeSlot, [e.target.name]: e.target.value });
-  };
-
-  const addTimeSlot = () => {
-    if (timeSlot.start && timeSlot.end) {
-      setAvailability((prev) => ({
-        ...prev,
-        [selectedDay]: [...prev[selectedDay], { ...timeSlot }],
-      }));
-      setTimeSlot({ start: "", end: "", timezone: timeSlot.timezone });
+  const addNewTimeSlot = (dayIndex) => {
+    const updatedWeekDays = [...weekDays];
+    if (updatedWeekDays[dayIndex].isUnavailable) {
+      updatedWeekDays[dayIndex] = {
+        ...updatedWeekDays[dayIndex],
+        isUnavailable: false,
+        times: [{ start: "9:00am", end: "5:00pm" }],
+      };
+    } else {
+      updatedWeekDays[dayIndex].times.push({ start: "9:00am", end: "5:00pm" });
     }
+    // In a real application, you would use setState here
   };
 
-  const copyAvailability = () => {
-    setCopiedDay(selectedDay);
+  const handleCopyClick = (dayIndex) => {
+    setSelectedDay(weekDays[dayIndex]);
+    setShowCopyModal(true);
+    console.log("Copy clicked", weekDays[dayIndex]);
+    // make a copy
+    // set the copy in the state
   };
 
-  const pasteAvailability = () => {
-    if (copiedDay && copiedDay !== selectedDay) {
-      setAvailability((prev) => ({
-        ...prev,
-        [selectedDay]: [...prev[copiedDay]],
-      }));
-    }
+  const replaceTimeSlot = (fromDayIndex, toDayIndex) => {
+    // Create a new copy of weekDays to ensure immutability
+    console.log("fromDayIndex", fromDayIndex, "toDayIndex", toDayIndex);
+    const updatedWeekDays = weekDays.map((day) => ({ ...day }));
+
+    const fromDay = updatedWeekDays[fromDayIndex];
+
+    toDayIndex.forEach((index) => {
+      updatedWeekDays[index] = {
+        ...updatedWeekDays[index], // Ensure new object reference
+        isUnavailable: false,
+        times: [...fromDay.times], // Copy times array to avoid mutation
+      };
+    });
+
+    console.log("updatedWeekDays", updatedWeekDays);
+    setWeekDays(updatedWeekDays); // React detects the new state
   };
+
+  console.log("modalSelectedDays", modalSelectedDays);
 
   return (
-    <Container>
-      <Typography variant="h4" gutterBottom>
-        Set Your Availability
-      </Typography>
-      <Button variant="outlined" onClick={copyAvailability} sx={{ mb: 2 }}>
-        Copy Availability
-      </Button>
-      <Button
-        variant="outlined"
-        onClick={pasteAvailability}
-        sx={{ mb: 2, ml: 2 }}
-      >
-        Paste Availability
-      </Button>
-      <Grid container spacing={2}>
-        {weekdays.map((day) => (
-          <Grid item xs={4} key={day}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={!!availability[day].length}
-                  onChange={() => handleDayToggle(day)}
-                />
-              }
-              label={day}
-            />
-          </Grid>
+    <div className="max-w-3xl p-6 font-sans">
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center space-x-2">
+          <Clock className="w-5 h-5" />
+          <h2 className="text-lg font-medium">Weekly Hours</h2>
+        </div>
+        <div className="flex items-center space-x-6">
+          <div>
+            <h2 className="text-lg font-medium">Date-specific hours</h2>
+            <p className="text-sm text-gray-500">
+              Adjust hours for specific days
+            </p>
+          </div>
+          <button className="flex items-center space-x-1 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50">
+            <Plus className="w-4 h-4" />
+            <span>Hours</span>
+          </button>
+        </div>
+      </div>
+
+      <p className="text-sm text-gray-500 mb-4">
+        Set when you are typically available for meetings
+      </p>
+
+      <div className="space-y-3">
+        {weekDays.map((day, index) => (
+          <div key={index} className="flex items-center space-x-4">
+            <div className="w-8 h-8 flex items-center justify-center bg-blue-700 text-white rounded-full">
+              {day.day}
+            </div>
+
+            {day.isUnavailable ? (
+              <div className="flex items-center space-x-2">
+                <span className="text-gray-700">Unavailable</span>
+                <button
+                  className="p-1 hover:bg-gray-100 rounded"
+                  onClick={() => addNewTimeSlot(index)}
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex-1 space-y-2">
+                {day.times.map((time, timeIndex) => (
+                  <div key={timeIndex} className="flex items-center space-x-2">
+                    <div className="flex space-x-2">
+                      <div className="bg-gray-100 px-3 py-1 rounded">
+                        {time.start}
+                      </div>
+                      <span>-</span>
+                      <div className="bg-gray-100 px-3 py-1 rounded">
+                        {time.end}
+                      </div>
+                    </div>
+                    <button className="p-1 hover:bg-gray-100 rounded">
+                      <X className="w-4 h-4" />
+                    </button>
+                    <button
+                      className="p-1 hover:bg-gray-100 rounded"
+                      onClick={() => addNewTimeSlot(index)}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                    <button
+                      className="p-1 hover:bg-gray-100 rounded"
+                      onClick={() => handleCopyClick(index)}
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         ))}
-      </Grid>
+      </div>
 
-      <Typography variant="h6" sx={{ mt: 2 }}>
-        Select Time Slots
-      </Typography>
-      <TextField
-        select
-        SelectProps={{ native: true }}
-        value={selectedDay}
-        onChange={(e) => setSelectedDay(e.target.value)}
-        fullWidth
-      >
-        {weekdays.map((day) => (
-          <option key={day} value={day}>
-            {day}
-          </option>
-        ))}
-      </TextField>
+      <div className="mt-6">
+        <button className="text-blue-600 text-sm flex items-center space-x-1">
+          <Clock className="w-4 h-4" />
+          <span>India Standard Time</span>
+        </button>
+      </div>
 
-      <Grid container spacing={2} sx={{ mt: 2 }}>
-        <Grid item xs={4}>
-          <TextField
-            label="Start Time"
-            type="time"
-            name="start"
-            value={timeSlot.start}
-            onChange={handleTimeChange}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={4}>
-          <TextField
-            label="End Time"
-            type="time"
-            name="end"
-            value={timeSlot.end}
-            onChange={handleTimeChange}
-            fullWidth
-          />
-        </Grid>
-        <Grid item xs={4}>
-          <TextField
-            select
-            label="Timezone"
-            name="timezone"
-            value={timeSlot.timezone}
-            onChange={handleTimeChange}
-            fullWidth
-          >
-            {timezones.map((tz) => (
-              <MenuItem key={tz} value={tz}>
-                {tz}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Grid>
-        <Grid item xs={12}>
-          <Button variant="contained" onClick={addTimeSlot} fullWidth>
-            Add
-          </Button>
-        </Grid>
-      </Grid>
-
-      <Typography variant="h6" sx={{ mt: 3 }}>
-        Your Availability
-      </Typography>
-      {weekdays.map(
-        (day) =>
-          availability[day].length > 0 && (
-            <Typography key={day}>
-              {day}:{" "}
-              {availability[day]
-                .map(
-                  ({ start, end, timezone }) =>
-                    `${start} - ${end} (${timezone})`
-                )
-                .join(", ")}
-            </Typography>
-          )
-      )}
-    </Container>
+      <Dialog open={showCopyModal} onOpenChange={setShowCopyModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Copy times to...</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>
+            Copy availability from {selectedDay?.name} to the following days
+          </DialogDescription>
+          <div className="space-y-3 py-4">
+            {weekDays
+              // remove selected day
+              .filter((day, index) =>
+                selectedDay ? index !== selectedDay.index : day
+              )
+              .map((day, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <input
+                    onChange={() => {
+                      if (modalSelectedDays.includes(index)) {
+                        setModalSelectedDays(
+                          modalSelectedDays.filter((day) => day !== index)
+                        );
+                      } else {
+                        setModalSelectedDays([...modalSelectedDays, index]);
+                      }
+                    }}
+                    type="checkbox"
+                    id={`day-${index}`}
+                    className="w-4 h-4 rounded border-gray-300"
+                  />
+                  <label htmlFor={`day-${index}`} className="text-sm">
+                    {day.name}
+                  </label>
+                </div>
+              ))}
+          </div>
+          <div className="flex justify-end space-x-2">
+            <button
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 border border-gray-300 rounded-md"
+              onClick={() => setShowCopyModal(false)}
+            >
+              Cancel
+            </button>
+            <button
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md"
+              onClick={() => {
+                replaceTimeSlot(selectedDay.index, modalSelectedDays);
+                setShowCopyModal(false);
+              }}
+            >
+              Apply
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 
-export default Availability;
+export default WeeklyHours;
